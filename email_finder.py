@@ -5,25 +5,39 @@ import json
 
 load_dotenv()
 
-def get_email(full_name, domain):
+def get_email(full_name, domain, enrich=False):
     """
-    Get email from hunter.io API
+    Get email from getemail.io API using POST request
+    
+    Args:
+        full_name (str): Full name of the prospect
+        domain (str): Company or website domain
+        enrich (bool): Whether to fetch additional contact info
+    
+    Returns:
+        dict: Response data if successful, None otherwise
     """
     api_key = os.getenv('GETEMAIL_API_KEY')
-    url = f"https://api.getemail.io/v1/email"
+    url = "https://api.getemail.io/dash/find-email"
     
-    params = {
-        'api_key': api_key,
-        'name': full_name,
+    headers = {
+        'api-key': api_key,
+        'Content-Type': 'application/json'
+    }
+    
+    payload = {
+        'fullname': full_name,
         'domain': domain
     }
     
+    if enrich:
+        payload['isEnrichToDo'] = True
+    
     try:
-        response = requests.get(url, params=params)
+        response = requests.post(url, headers=headers, json=payload)
         if response.status_code == 200:
             data = response.json()
-            if data.get('success'):
-                return data.get('email')
+            return data
     except Exception as e:
         print(f"Error getting email: {str(e)}")
     

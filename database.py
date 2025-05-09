@@ -11,39 +11,38 @@ db_password = os.getenv('MONGODB_PASSWORD')
 if not db_password:
     raise ValueError("MONGODB_PASSWORD environment variable is not set")
 
-# Connect to MongoDB Atlas
-connection_string = f"mongodb+srv://bpdatal5:{db_password}@cluster0.ingjjwc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+connection_string = f"mongodb+srv://coldemail:{db_password}@cluster0.ingjjwc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 client = MongoClient(connection_string)
-print("Connected to MongoDB Atlas")
-print(client.list_database_names())
+db = client.get_database('ColdEmail')
+contacts = db.get_collection('contacts')
 
-# def save_contact(name, email_found, email=None):
-#     try:
-#         contact = {
-#             '_id': name.lower().replace(" ", "_"),
-#             'name': name,
-#             'email_found': email_found,
-#             'email': email,
-#             'date': datetime.utcnow()
-#         }
-#         contacts.replace_one({'_id': contact['_id']}, contact, upsert=True)
-#         return True
-#     except Exception as e:
-#         print(f"Error saving contact: {str(e)}")
-#         return False
+def save_contact(name, email_found, email=None):
+    try:
+        contact = {
+            '_id': name.lower().replace(" ", "_"),
+            'name': name,
+            'email_found': email_found,
+            'email': email,
+            'date': datetime.utcnow()
+        }
+        contacts.replace_one({'_id': contact['_id']}, contact, upsert=True)
+        return True
+    except Exception as e:
+        print(f"Error saving contact: {str(e)}")
+        return False
 
-# def contact_exists(name):
-#     try:
-#         contact = contacts.find_one({'name': name})
-#         return bool(contact)
-#     except Exception as e:
-#         print(f"Error checking contact: {str(e)}")
-#         return False
+def contact_exists(name):
+    try:
+        contact = contacts.find_one({'name': name})
+        return bool(contact)
+    except Exception as e:
+        print(f"Error checking contact: {str(e)}")
+        return False
 
-# def cleanup_old_records():
-#     """Delete records older than 2 weeks"""
-#     try:
-#         two_weeks_ago = datetime.utcnow() - timedelta(days=14)
-#         contacts.delete_many({'date': {'$lt': two_weeks_ago}})
-#     except Exception as e:
-#         print(f"Error during cleanup: {str(e)}")
+def cleanup_old_records():
+    """Delete records older than 2 weeks"""
+    try:
+        two_weeks_ago = datetime.utcnow() - timedelta(days=14)
+        contacts.delete_many({'date': {'$lt': two_weeks_ago}})
+    except Exception as e:
+        print(f"Error during cleanup: {str(e)}")
