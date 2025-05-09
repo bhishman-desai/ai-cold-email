@@ -1,63 +1,49 @@
 import os
-from sqlalchemy import create_engine, Column, String, Boolean, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
+from pymongo import MongoClient
+from dotenv import load_dotenv
 
-Base = declarative_base()
+# Load environment variables
+load_dotenv()
 
-class Contact(Base):
-    __tablename__ = 'contacts'
-    
-    id = Column(String, primary_key=True)
-    name = Column(String, nullable=False)
-    email_found = Column(Boolean, default=False)
-    email = Column(String)
-    date = Column(DateTime, default=datetime.utcnow)
+# Get MongoDB password from environment variable
+db_password = os.getenv('MONGODB_PASSWORD')
+if not db_password:
+    raise ValueError("MONGODB_PASSWORD environment variable is not set")
 
-# Create SQLite database engine
-engine = create_engine('sqlite:///contacts.db')
-Base.metadata.create_all(engine)
+# Connect to MongoDB Atlas
+connection_string = f"mongodb+srv://bpdatal5:{db_password}@cluster0.ingjjwc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(connection_string)
+print("Connected to MongoDB Atlas")
+print(client.list_database_names())
 
-Session = sessionmaker(bind=engine)
+# def save_contact(name, email_found, email=None):
+#     try:
+#         contact = {
+#             '_id': name.lower().replace(" ", "_"),
+#             'name': name,
+#             'email_found': email_found,
+#             'email': email,
+#             'date': datetime.utcnow()
+#         }
+#         contacts.replace_one({'_id': contact['_id']}, contact, upsert=True)
+#         return True
+#     except Exception as e:
+#         print(f"Error saving contact: {str(e)}")
+#         return False
 
-def save_contact(name, email_found, email=None):
-    session = Session()
-    try:
-        contact = Contact(
-            id=name.lower().replace(" ", "_"),
-            name=name,
-            email_found=email_found,
-            email=email,
-            date=datetime.utcnow()
-        )
-        session.add(contact)
-        session.commit()
-        return True
-    except Exception as e:
-        print(f"Error saving contact: {str(e)}")
-        session.rollback()
-        return False
-    finally:
-        session.close()
+# def contact_exists(name):
+#     try:
+#         contact = contacts.find_one({'name': name})
+#         return bool(contact)
+#     except Exception as e:
+#         print(f"Error checking contact: {str(e)}")
+#         return False
 
-def contact_exists(name):
-    session = Session()
-    try:
-        contact = session.query(Contact).filter(Contact.name == name).first()
-        return bool(contact)
-    finally:
-        session.close()
-
-def cleanup_old_records():
-    """Delete records older than 2 weeks"""
-    session = Session()
-    try:
-        two_weeks_ago = datetime.utcnow() - timedelta(days=14)
-        session.query(Contact).filter(Contact.date < two_weeks_ago).delete()
-        session.commit()
-    except Exception as e:
-        print(f"Error during cleanup: {str(e)}")
-        session.rollback()
-    finally:
-        session.close()
+# def cleanup_old_records():
+#     """Delete records older than 2 weeks"""
+#     try:
+#         two_weeks_ago = datetime.utcnow() - timedelta(days=14)
+#         contacts.delete_many({'date': {'$lt': two_weeks_ago}})
+#     except Exception as e:
+#         print(f"Error during cleanup: {str(e)}")
