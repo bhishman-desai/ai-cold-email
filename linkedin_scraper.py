@@ -15,10 +15,32 @@ load_dotenv()
 
 def setup_driver():
     chrome_options = Options()
-    # Add options for headless mode if needed
-    # chrome_options.add_argument('--headless')
+    # Don't use headless mode since we need manual login
     driver = webdriver.Chrome(options=chrome_options)
     return driver
+
+def login_to_linkedin():
+    """
+    Open LinkedIn and wait for manual login
+    """
+    driver = setup_driver()
+    print("Opening LinkedIn for manual login...")
+    driver.get("https://www.linkedin.com/login")
+    
+    # Wait for successful login by checking for the presence of the search bar
+    print("Please log in manually in the browser window...")
+    print("Waiting for login to complete...")
+    
+    try:
+        WebDriverWait(driver, 300).until(  # 5 minute timeout
+            EC.presence_of_element_located((By.CLASS_NAME, "search-global-typeahead__input"))
+        )
+        print("Successfully logged in!")
+        return driver
+    except Exception as e:
+        print("Login timeout or error occurred")
+        driver.quit()
+        raise e
 
 def extract_domain_from_company(company):
     """
@@ -53,14 +75,16 @@ def process_linkedin_results(html_content):
     return results
 
 def main():
-    driver = setup_driver()
-    current_page = 1
-    max_pages = 100  # LinkedIn shows max 100 pages
-    
     try:
+        # Start with login
+        driver = login_to_linkedin()
+        
         # Get the email template
         with open('email_template.txt', 'r') as f:
             email_template = f.read()
+            
+        current_page = 1
+        max_pages = 1  # LinkedIn shows max 100 pages
         
         while current_page <= max_pages:
             # URLs for recruiters and managers
