@@ -128,8 +128,8 @@ def main():
         while current_page <= max_pages:
             # URLs for recruiters and managers
             urls = [
-                f"https://www.linkedin.com/search/results/people/?industry=%5B%2296%22%5D&keywords=recruiter&origin=FACETED_SEARCH&page={current_page}",
-                f"https://www.linkedin.com/search/results/people/?industry=%5B%2296%22%2C%221594%22%2C%226%22%5D&keywords=manager&origin=FACETED_SEARCH&page={current_page}"
+                f"https://www.linkedin.com/search/results/people/?industry=%5B%2296%22%2C%221594%22%2C%226%22%5D&keywords=manager&origin=FACETED_SEARCH&page={current_page}",
+                f"https://www.linkedin.com/search/results/people/?industry=%5B%2296%22%5D&keywords=recruiter&origin=FACETED_SEARCH&page={current_page}"
             ]
             
             for url in urls:
@@ -184,7 +184,7 @@ def main():
                         print(f"No email found for {name}")
                     
                     # Save to database
-                    save_contact(name, bool(email), email)
+                    save_contact(name, bool(email), email, domain=company)
                     
                     # Increment processed count
                     TOTAL_PROCESSED += 1

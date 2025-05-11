@@ -16,12 +16,13 @@ client = MongoClient(connection_string)
 db = client.get_database('ColdEmail')
 contacts = db.get_collection('contacts')
 
-def save_contact(name, email_found, email=None):
+def save_contact(name, email_found, domain, email=None):
     try:
         contact = {
             'name': name,
             'email_found': email_found,
             'email': email,
+            'domain': domain,
             'date': datetime.utcnow()
         }
         # Insert the contact and let MongoDB auto-generate the _id
