@@ -200,7 +200,7 @@ def main():
             current_page += 1
             
             # Clean up old records
-            cleanup_old_records()
+            # cleanup_old_records()
             
             # Sleep between pages
             time.sleep(5)
