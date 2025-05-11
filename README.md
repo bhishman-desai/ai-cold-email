@@ -1,14 +1,17 @@
-# LinkedIn Cold Email Automation
+# AI-Powered LinkedIn Outreach Assistant
 
-This Python project automates the process of finding and reaching out to potential LinkedIn connections via email.
+This Python project leverages advanced AI technologies to intelligently automate LinkedIn prospecting and personalized email outreach. Using the Mistral-7B Large Language Model, it analyzes LinkedIn profiles, extracts relevant information, and generates contextually appropriate outreach messages.
 
 ## Features
 
-- LinkedIn profile scraping
-- Email discovery using getemail.io
-- Automated email sending
-- SQLite database for tracking contacts
+- Advanced AI profile analysis using Mistral-7B LLM
+- Intelligent contact information extraction with deep learning
+- Smart LinkedIn profile scraping with Selenium
+- Email discovery using GetProspect API
+- Automated personalized email sending
+- MongoDB database for tracking contacts
 - Rate limiting and pagination handling
+- AI-powered contact information extraction
 
 ## Setup
 
@@ -33,9 +36,10 @@ Copy-Item sample.env .env
 ## Configuration
 
 Update the `.env` file with your:
-- LinkedIn credentials
 - SMTP email server details
-- getemail.io API key
+- GetProspect API key
+- MongoDB password
+- Hugging Face API key for Mistral-7B
 
 ## Usage
 
@@ -48,7 +52,7 @@ The script will:
 1. Search LinkedIn for recruiters and managers
 2. Find their email addresses
 3. Send personalized emails
-4. Track all interactions in the SQLite database
+4. Track all interactions in MongoDB
 
 ## Safety Features
 

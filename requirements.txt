@@ -1,6 +1,22 @@
-selenium
-beautifulsoup4
-requests
-schedule
-python-dotenv
-SQLAlchemy
+# Web Scraping
+selenium>=4.15.0
+beautifulsoup4>=4.12.0
+
+# Database
+pymongo>=4.6.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# Email Handling
+email-validator>=2.1.0
+
+# AI/ML Dependencies
+huggingface-hub>=0.19.0
+transformers>=4.35.0
+
+# Date/Time Handling
+python-dateutil>=2.8.2
