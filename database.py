@@ -19,13 +19,13 @@ contacts = db.get_collection('contacts')
 def save_contact(name, email_found, email=None):
     try:
         contact = {
-            '_id': name.lower().replace(" ", "_"),
             'name': name,
             'email_found': email_found,
             'email': email,
             'date': datetime.utcnow()
         }
-        contacts.replace_one({'_id': contact['_id']}, contact, upsert=True)
+        # Insert the contact and let MongoDB auto-generate the _id
+        contacts.insert_one(contact)
         return True
     except Exception as e:
         print(f"Error saving contact: {str(e)}")
@@ -48,3 +48,4 @@ def cleanup_old_records():
         print(f"Error during cleanup: {str(e)}")
 
 # contacts.delete_many({})  # Clear the collection for testing purposes
+save_contact("John Doe", True, "bpdatal5@gmail.com")
