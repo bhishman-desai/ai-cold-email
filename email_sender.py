@@ -42,4 +42,4 @@ def send_email(to_email, subject, recipient_name):
         print(f"Error sending email: {str(e)}")
         return False
 
-print(send_email('nanchaurasia@gmail.com', "Quick Chat?", "Nandini Chaurasia"))
+# print(send_email('nanchaurasia@gmail.com', "Quick Chat?", "Nandini Chaurasia"))
