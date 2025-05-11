@@ -1,44 +1,38 @@
 import os
 from dotenv import load_dotenv
 import requests
-import json
+from urllib.parse import quote
 
 load_dotenv()
 
-def get_email(full_name, domain, enrich=False):
+def get_email(name, company):
     """
-    Get email from getemail.io API using POST request
-    
-    Args:
-        full_name (str): Full name of the prospect
-        domain (str): Company or website domain
-        enrich (bool): Whether to fetch additional contact info
-    
-    Returns:
-        dict: Response data if successful, None otherwise
+    Get email using GetProspect API
     """
-    api_key = os.getenv('GETEMAIL_API_KEY')
-    url = "https://api.getemail.io/dash/find-email"
+    api_key = os.getenv('GETPROSPECT_API_KEY')
+    if not api_key:
+        raise ValueError("GetProspect API key not found in environment variables")
+    
+    # URL encode the name and company
+    encoded_name = quote(name)
+    encoded_company = quote(company)
+    
+    url = f"https://api.getprospect.com/public/v1/email/find?name={encoded_name}&company={encoded_company}"
     
     headers = {
-        'api-key': api_key,
-        'Content-Type': 'application/json'
+        "accept": "application/json",
+        "apiKey": api_key
     }
-    
-    payload = {
-        'fullname': full_name,
-        'domain': domain
-    }
-    
-    if enrich:
-        payload['isEnrichToDo'] = True
     
     try:
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code == 200:
-            data = response.json()
-            return data
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        
+        # You might want to add more error handling based on the API response structure
+        if 'email' in data:
+            return data['email']
+        return None
     except Exception as e:
-        print(f"Error getting email: {str(e)}")
-    
-    return None
+        print(f"Error getting email from GetProspect: {str(e)}")
+        return None

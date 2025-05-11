@@ -8,7 +8,6 @@ import time
 from database import contact_exists, save_contact, cleanup_old_records
 from email_finder import get_email
 from email_sender import send_email
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -42,34 +41,33 @@ def login_to_linkedin():
         driver.quit()
         raise e
 
-def extract_domain_from_company(company):
-    """
-    Extract domain from company name
-    You might want to enhance this with a company domain lookup service
-    """
-    # Remove common suffixes and convert to lowercase
-    company = company.lower().replace(' at ', '').replace('ltd', '').replace('inc', '').strip()
-    # Convert to domain format
-    domain = f"{company.replace(' ', '')}.com"
-    return domain
-
 def process_linkedin_results(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     results = []
     
-    # Adjust these selectors based on the actual LinkedIn HTML structure
-    person_cards = soup.find_all('div', class_='entity-result__item')
+    # Find all person cards in the search results
+    person_cards = soup.find_all('div', {'class': 'entity-result__item'})
     
     for card in person_cards:
         try:
-            name = card.find('span', class_='entity-result__title-text').get_text().strip()
-            company = card.find('div', class_='entity-result__primary-subtitle').get_text().strip()
+            # Find the name element
+            name_element = card.find('span', {'class': 'entity-result__title-text'})
+            name = name_element.get_text().strip() if name_element else ''
             
-            results.append({
-                'name': name,
-                'company': company
-            })
-        except:
+            # Find the company element
+            company_element = card.find('div', {'class': 'entity-result__primary-subtitle'})
+            company = company_element.get_text().strip() if company_element else ''
+            
+            if name and company:
+                # Clean up company name - remove "at" and other common words
+                company = company.replace(' at ', ' ').replace(' @ ', ' ').strip()
+                
+                results.append({
+                    'name': name,
+                    'company': company
+                })
+        except Exception as e:
+            print(f"Error processing card: {str(e)}")
             continue
             
     return results
@@ -116,18 +114,18 @@ def main():
                         print(f"Skipping {name} - already processed")
                         continue
                     
-                    # Get company domain
-                    domain = extract_domain_from_company(company)
+                    print(f"Processing {name} from {company}")
                     
                     # Get email
-                    email = get_email(name, domain)
+                    email = get_email(name, company)
                     
                     if email:
-                        # Send email
-                        if send_email(email, "Opportunity to Connect", email_template, name):
-                            print(f"Email sent successfully to {name} at {email}")
-                        else:
-                            print(f"Failed to send email to {name} at {email}")
+                        print(f"Found email for {name}: {email}")
+                        # Uncomment the following lines when ready to send emails
+                        # if send_email(email, "Opportunity to Connect", email_template, name):
+                        #     print(f"Email sent successfully to {name} at {email}")
+                        # else:
+                        #     print(f"Failed to send email to {name} at {email}")
                     else:
                         print(f"No email found for {name}")
                     
