@@ -178,6 +178,8 @@ def main():
                         print(f"Found email for {name}: {email}")
                         if send_email(email, "Quick Chat?", name):
                             print(f"Email sent successfully to {name} at {email}")
+                            # Increment processed count
+                            TOTAL_PROCESSED += 1
                         else:
                             print(f"Failed to send email to {name} at {email}")
                     else:
@@ -185,9 +187,6 @@ def main():
                     
                     # Save to database
                     save_contact(name, bool(email), company, email)
-                    
-                    # Increment processed count
-                    TOTAL_PROCESSED += 1
                     
                     # Sleep to avoid rate limiting
                     time.sleep(2)
