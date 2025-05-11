@@ -117,6 +117,8 @@ def process_linkedin_results(html_content):
 
 def main():
     try:
+        global TOTAL_PROCESSED
+        
         # Start with login
         driver = login_to_linkedin()
             
@@ -147,7 +149,6 @@ def main():
                 
                 # Get page source and process results
                 results = process_linkedin_results(driver.page_source)
-                global TOTAL_PROCESSED
                 
                 for person in results:
                     # Skip if we haven't reached minimum contacts
