@@ -114,13 +114,9 @@ def main():
     try:
         # Start with login
         driver = login_to_linkedin()
-        
-        # Get the email template
-        with open('email_template.txt', 'r') as f:
-            email_template = f.read()
             
         current_page = 1
-        max_pages = 1  # LinkedIn shows max 100 pages
+        max_pages = 100  # LinkedIn shows max 100 pages
         
         while current_page <= max_pages:
             # URLs for recruiters and managers
@@ -144,9 +140,8 @@ def main():
                 results = process_linkedin_results(driver.page_source)
                 
                 for person in results:
-                    print(results)
                     name = person['name']
-                    company = person['company']
+                    company = person['domain']
                     
                     # Skip if already processed
                     if contact_exists(name):
@@ -156,16 +151,14 @@ def main():
                     print(f"Processing {name} from {company}")
                     
                     # Get email
-                    # email = get_email(name, company)
-                    email = "bhishman.desai@nshealth.ca"
+                    email = get_email(name, company)
                     
                     if email:
                         print(f"Found email for {name}: {email}")
-                        # Uncomment the following lines when ready to send emails
-                        # if send_email(email, "Opportunity to Connect", email_template, name):
-                        #     print(f"Email sent successfully to {name} at {email}")
-                        # else:
-                        #     print(f"Failed to send email to {name} at {email}")
+                        if send_email(email, "Quick Chat?", name):
+                            print(f"Email sent successfully to {name} at {email}")
+                        else:
+                            print(f"Failed to send email to {name} at {email}")
                     else:
                         print(f"No email found for {name}")
                     

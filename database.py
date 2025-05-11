@@ -46,3 +46,5 @@ def cleanup_old_records():
         contacts.delete_many({'date': {'$lt': two_weeks_ago}})
     except Exception as e:
         print(f"Error during cleanup: {str(e)}")
+
+# contacts.delete_many({})  # Clear the collection for testing purposes

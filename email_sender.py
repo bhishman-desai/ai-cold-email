@@ -6,10 +6,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def send_email(to_email, subject, template, recipient_name):
+def send_email(to_email, subject, recipient_name):
     """
     Send email using SMTP
     """
+    template = None
+    # Get the email template
+    with open('email_template.txt', 'r') as f:
+        template = f.read()
+
     smtp_server = os.getenv('SMTP_SERVER')
     smtp_port = int(os.getenv('SMTP_PORT', 587))
     smtp_username = os.getenv('SMTP_USERNAME')
@@ -36,3 +41,5 @@ def send_email(to_email, subject, template, recipient_name):
     except Exception as e:
         print(f"Error sending email: {str(e)}")
         return False
+
+print(send_email('nanchaurasia@gmail.com', "Quick Chat?", "Nandini Chaurasia"))
