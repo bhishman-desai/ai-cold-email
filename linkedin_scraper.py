@@ -17,7 +17,7 @@ load_dotenv()
 
 # Configuration for contact limits
 MIN_CONTACTS = 0  # Start processing from this position
-MAX_CONTACTS = 2  # Stop after processing this many contacts
+MAX_CONTACTS = 100  # Stop after processing this many contacts
 TOTAL_PROCESSED = 0  # Keep track of processed contacts
 
 def setup_driver():
@@ -162,6 +162,11 @@ def main():
                         return
                     
                     name = person['name']
+                    
+                    if not person['domain']:
+                        print(f"Skipping {name} - no domain found")
+                        continue
+                    
                     company = person['domain'].replace('@', '')
                     
                     # Skip if already processed
