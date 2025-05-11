@@ -9,6 +9,9 @@ from database import contact_exists, save_contact, cleanup_old_records
 from email_finder import get_email
 from email_sender import send_email
 from dotenv import load_dotenv
+import requests
+import json
+import os
 
 load_dotenv()
 
@@ -41,33 +44,68 @@ def login_to_linkedin():
         driver.quit()
         raise e
 
+def process_with_llm(text):
+    """
+    Process text with Hugging Face Inference API using Mistral 7B Chat format
+    """
+    API_URL = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions"
+    headers = {"Authorization": "Bearer " + os.getenv("HUGGINGFACE_API_KEY")}
+
+    prompt = f"""Extract the name and company domain from this LinkedIn profile text. Domanin should be the main company name from their current position and in @company format which exists. 
+    Return JSON format with 'name' and 'domain' keys. 
+    
+    Text: {text}
+    
+    Example response:
+    {{"name": "John Doe", "domain": "@google.com"}}"""
+
+    payload = {
+        "messages": [{
+            "role": "user",
+            "content": prompt
+        }],
+        "model": "mistralai/Mistral-7B-Instruct-v0.3",
+        "temperature": 0.1  # Add parameters for more consistent output
+    }
+
+    try:
+        response = requests.post(API_URL, headers=headers, json=payload)
+        response.raise_for_status()
+        
+        # Extract the generated content
+        generated_text = response.json()["choices"][0]["message"]["content"]
+        
+        # Clean the response to get valid JSON
+        json_str = generated_text.split("{")[1].split("}")[0]
+        json_str = "{" + json_str + "}"
+        
+        return json.loads(json_str)
+    except Exception as e:
+        print(f"LLM Error: {str(e)}")
+        return None
+
 def process_linkedin_results(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     results = []
     
-    # Find all person cards in the search results
-    person_cards = soup.find_all('div', {'class': 'entity-result__item'})
+    # Find all person containers using data attribute
+    person_cards = soup.find_all('div', {'data-chameleon-result-urn': True})
     
     for card in person_cards:
         try:
-            # Find the name element
-            name_element = card.find('span', {'class': 'entity-result__title-text'})
-            name = name_element.get_text().strip() if name_element else ''
+            # Extract raw text content
+            text_content = ' '.join(card.stripped_strings)
             
-            # Find the company element
-            company_element = card.find('div', {'class': 'entity-result__primary-subtitle'})
-            company = company_element.get_text().strip() if company_element else ''
+            # Get structured data using LLM
+            parsed_data = process_with_llm(text_content)
             
-            if name and company:
-                # Clean up company name - remove "at" and other common words
-                company = company.replace(' at ', ' ').replace(' @ ', ' ').strip()
-                
+            if parsed_data:
                 results.append({
-                    'name': name,
-                    'company': company
+                    'name': parsed_data.get('name', ''),
+                    'domain': parsed_data.get('domain', '')
                 })
         except Exception as e:
-            print(f"Error processing card: {str(e)}")
+            print(f"Processing Error: {str(e)}")
             continue
             
     return results
@@ -106,6 +144,7 @@ def main():
                 results = process_linkedin_results(driver.page_source)
                 
                 for person in results:
+                    print(results)
                     name = person['name']
                     company = person['company']
                     
@@ -117,7 +156,8 @@ def main():
                     print(f"Processing {name} from {company}")
                     
                     # Get email
-                    email = get_email(name, company)
+                    # email = get_email(name, company)
+                    email = "bhishman.desai@nshealth.ca"
                     
                     if email:
                         print(f"Found email for {name}: {email}")
