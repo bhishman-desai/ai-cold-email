@@ -15,6 +15,11 @@ import os
 
 load_dotenv()
 
+# Configuration for contact limits
+MIN_CONTACTS = 0  # Start processing from this position
+MAX_CONTACTS = 2  # Stop after processing this many contacts
+TOTAL_PROCESSED = 0  # Keep track of processed contacts
+
 def setup_driver():
     chrome_options = Options()
     # Don't use headless mode since we need manual login
@@ -138,8 +143,19 @@ def main():
                 
                 # Get page source and process results
                 results = process_linkedin_results(driver.page_source)
+                global TOTAL_PROCESSED
                 
                 for person in results:
+                    # Skip if we haven't reached minimum contacts
+                    if TOTAL_PROCESSED < MIN_CONTACTS:
+                        TOTAL_PROCESSED += 1
+                        continue
+                        
+                    # Stop if we've reached maximum contacts
+                    if TOTAL_PROCESSED >= MAX_CONTACTS:
+                        print(f"Reached maximum number of contacts ({MAX_CONTACTS})")
+                        return
+                    
                     name = person['name']
                     company = person['domain']
                     
@@ -148,7 +164,7 @@ def main():
                         print(f"Skipping {name} - already processed")
                         continue
                     
-                    print(f"Processing {name} from {company}")
+                    print(f"Processing {name} from {company} (Contact {TOTAL_PROCESSED + 1} of {MAX_CONTACTS})")
                     
                     # Get email
                     email = get_email(name, company)
@@ -164,6 +180,9 @@ def main():
                     
                     # Save to database
                     save_contact(name, bool(email), email)
+                    
+                    # Increment processed count
+                    TOTAL_PROCESSED += 1
                     
                     # Sleep to avoid rate limiting
                     time.sleep(2)
