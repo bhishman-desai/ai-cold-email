@@ -131,6 +131,10 @@ def main():
             ]
             
             for url in urls:
+                # Check if we've already reached max contacts
+                if TOTAL_PROCESSED >= MAX_CONTACTS:
+                    break
+                    
                 driver.get(url)
                 
                 # Wait for results to load
@@ -187,6 +191,11 @@ def main():
                     # Sleep to avoid rate limiting
                     time.sleep(2)
             
+            # Check if we've reached max contacts before moving to next page
+            if TOTAL_PROCESSED >= MAX_CONTACTS:
+                print(f"Reached maximum number of contacts ({MAX_CONTACTS}). Stopping search.")
+                break
+                
             current_page += 1
             
             # Clean up old records
