@@ -162,7 +162,7 @@ def main():
                         return
                     
                     name = person['name']
-                    company = person['domain']
+                    company = person['domain'].replace('@', '')
                     
                     # Skip if already processed
                     if contact_exists(name):
