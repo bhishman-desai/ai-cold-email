@@ -184,7 +184,7 @@ def main():
                         print(f"No email found for {name}")
                     
                     # Save to database
-                    save_contact(name, bool(email), email, domain=company)
+                    save_contact(name, bool(email), company, email)
                     
                     # Increment processed count
                     TOTAL_PROCESSED += 1
