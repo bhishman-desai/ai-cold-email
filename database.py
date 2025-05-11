@@ -48,4 +48,4 @@ def cleanup_old_records():
         print(f"Error during cleanup: {str(e)}")
 
 # contacts.delete_many({})  # Clear the collection for testing purposes
-save_contact("John Doe", True, "bpdatal5@gmail.com")
+# save_contact("John Doe", True, "bpdatal5@gmail.com")
