@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import time
-from database import contact_exists, save_contact, cleanup_old_records
+from database import contact_exists, save_contact, cleanup_old_records, get_last_page, update_page_number
 from email_finder import get_email
 from email_sender import send_email
 from dotenv import load_dotenv
@@ -121,22 +121,26 @@ def main():
         
         # Start with login
         driver = login_to_linkedin()
-            
-        current_page = 1
+        
+        # URLs for recruiters and managers
+        base_urls = [
+            "https://www.linkedin.com/search/results/people/?industry=%5B%2296%22%2C%221594%22%2C%226%22%5D&keywords=manager&origin=FACETED_SEARCH&page=",
+            "https://www.linkedin.com/search/results/people/?industry=%5B%2296%22%5D&keywords=recruiter&origin=FACETED_SEARCH&page="
+        ]
+        
         max_pages = 100  # LinkedIn shows max 100 pages
         
-        while current_page <= max_pages:
-            # URLs for recruiters and managers
-            urls = [
-                f"https://www.linkedin.com/search/results/people/?industry=%5B%2296%22%2C%221594%22%2C%226%22%5D&keywords=manager&origin=FACETED_SEARCH&page={current_page}",
-                f"https://www.linkedin.com/search/results/people/?industry=%5B%2296%22%5D&keywords=recruiter&origin=FACETED_SEARCH&page={current_page}"
-            ]
+        for base_url in base_urls:
+            # Get the last processed page for this URL
+            current_page = get_last_page(base_url)
+            print(f"Resuming from page {current_page} for URL: {base_url}")
             
-            for url in urls:
+            while current_page <= max_pages:
                 # Check if we've already reached max contacts
                 if TOTAL_PROCESSED >= MAX_CONTACTS:
                     break
-                    
+                
+                url = f"{base_url}{current_page}"
                 driver.get(url)
                 
                 # Wait for results to load
@@ -150,16 +154,17 @@ def main():
                 # Get page source and process results
                 results = process_linkedin_results(driver.page_source)
                 
+                # Process each person
                 for person in results:
                     # Skip if we haven't reached minimum contacts
                     if TOTAL_PROCESSED < MIN_CONTACTS:
                         TOTAL_PROCESSED += 1
                         continue
-                        
+                    
                     # Stop if we've reached maximum contacts
                     if TOTAL_PROCESSED >= MAX_CONTACTS:
                         print(f"Reached maximum number of contacts ({MAX_CONTACTS})")
-                        return
+                        break
                     
                     name = person['name']
                     
@@ -195,24 +200,18 @@ def main():
                     
                     # Sleep to avoid rate limiting
                     time.sleep(2)
-            
-            # Check if we've reached max contacts before moving to next page
-            if TOTAL_PROCESSED >= MAX_CONTACTS:
-                print(f"Reached maximum number of contacts ({MAX_CONTACTS}). Stopping search.")
-                break
                 
-            current_page += 1
-            
-            # Clean up old records
-            # cleanup_old_records()
-            
-            # Sleep between pages
-            time.sleep(5)
+                # Update the page number in database after processing each page
+                update_page_number(base_url, current_page)
+                current_page += 1
+                
+            print(f"Finished processing URL: {base_url}")
             
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"An error occurred: {str(e)}")
     finally:
-        driver.quit()
+        if 'driver' in locals():
+            driver.quit()
 
 if __name__ == "__main__":
     main()

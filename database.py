@@ -16,6 +16,9 @@ client = MongoClient(connection_string)
 db = client.get_database('ColdEmail')
 contacts = db.get_collection('contacts')
 
+# Add new collection for page tracking
+page_tracking = db.get_collection('page_tracking')
+
 def save_contact(name, email_found, domain, email=None):
     try:
         contact = {
@@ -47,6 +50,28 @@ def cleanup_old_records():
         contacts.delete_many({'date': {'$lt': two_weeks_ago}})
     except Exception as e:
         print(f"Error during cleanup: {str(e)}")
+
+def get_last_page(url):
+    """Get the last processed page number for a given URL"""
+    try:
+        result = page_tracking.find_one({'url': url})
+        return result['page_number'] if result else 1
+    except Exception as e:
+        print(f"Error getting last page: {str(e)}")
+        return 1
+
+def update_page_number(url, page_number):
+    """Update the last processed page number for a given URL"""
+    try:
+        page_tracking.update_one(
+            {'url': url},
+            {'$set': {'url': url, 'page_number': page_number}},
+            upsert=True
+        )
+        return True
+    except Exception as e:
+        print(f"Error updating page number: {str(e)}")
+        return False
 
 # contacts.delete_many({})  # Clear the collection for testing purposes
 # save_contact("John Doe", True, "bpdatal5@gmail.com")
